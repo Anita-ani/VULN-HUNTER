@@ -28,6 +28,23 @@ class SmartCrawler:
             else:
                 self.on_asset_found(asset_data)
 
+    def is_in_scope(self, url):
+        try:
+            parsed = urlparse(url)
+            # 1. Subdomain Lock (Strict)
+            if not (parsed.netloc == self.scope_domain or parsed.netloc.endswith("." + self.scope_domain)):
+                return False
+            
+            # 2. Safety Controls (Auth/Destructive Action Protection)
+            # Prevent crawler from hitting logout or delete endpoints
+            risk_keywords = ['logout', 'signout', 'logoff', 'delete', 'destroy', 'remove']
+            if any(k in url.lower() for k in risk_keywords):
+                return False
+                
+            return True
+        except:
+            return False
+
     async def crawl(self):
         async with async_playwright() as p:
             # Launch browser with security disabled to find more issues
@@ -40,6 +57,10 @@ class SmartCrawler:
             
             try:
                 # 1. Initial Navigation
+                if not self.is_in_scope(self.target_url):
+                    print("Target out of scope!")
+                    return
+
                 await page.goto(self.target_url, timeout=30000, wait_until="networkidle")
                 await self.extract_page_data(page)
 
@@ -49,7 +70,8 @@ class SmartCrawler:
                     () => Array.from(document.querySelectorAll('a')).map(a => a.href)
                 """)
                 
-                unique_links = set([l for l in links if self.scope_domain in l])
+                # Filter by Scope and Visited
+                unique_links = set([l for l in links if self.is_in_scope(l)])
                 
                 for link in list(unique_links)[:10]: # Limit to 10 for demo speed
                     if link not in self.visited:
@@ -68,10 +90,8 @@ class SmartCrawler:
         # Capture API calls (XHR/Fetch)
         if request.resource_type in ["xhr", "fetch"]:
             url = request.url
-            # Strict Scope Check: Hostname must match exactly or end with .domain
-            parsed_url = urlparse(url)
-            if parsed_url.netloc == self.scope_domain or parsed_url.netloc.endswith("." + self.scope_domain):
-                params = list(parse_qs(parsed_url.query).keys())
+            if self.is_in_scope(url):
+                params = list(parse_qs(urlparse(url).query).keys())
                 await self._report_asset(url, "api", request.method, params)
 
     async def extract_page_data(self, page):

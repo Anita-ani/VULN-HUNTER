@@ -15,8 +15,9 @@ from app.engine.modules.nosqli import NoSQLiModule
 from app.engine.modules.ldap import LDAPModule
 
 class AutoFuzzer:
-    def __init__(self, scan_id):
+    def __init__(self, scan_id, concurrency=10):
         self.scan_id = scan_id
+        self.sem = asyncio.Semaphore(concurrency) # Rate Limiting / Safety Cap
         
     async def fuzz_asset(self, asset):
         url = asset['url']
@@ -53,7 +54,18 @@ class AutoFuzzer:
                 LDAPModule(session)
             ]
             
+            tasks = []
             for param in param_list:
-                # Run all modules concurrently for this param to be "Fast & Premium"
-                tasks = [m.check(url, method, param, self.scan_id) for m in modules]
+                for m in modules:
+                    # Run safely within semaphore limits
+                    tasks.append(self.run_safe(m.check, url, method, param, self.scan_id))
+            
+            if tasks:
                 await asyncio.gather(*tasks)
+
+    async def run_safe(self, func, *args):
+        async with self.sem:
+            try:
+                await func(*args)
+            except Exception as e:
+                pass

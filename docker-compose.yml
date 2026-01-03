@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  vuln-hunter:
+    build: .
+    container_name: vuln-hunter-enterprise
+    ports:
+      - "8000:8000"
+      - "8081:8081"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    restart: unless-stopped

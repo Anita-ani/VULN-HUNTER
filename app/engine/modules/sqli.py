@@ -36,7 +36,12 @@ class SQLiModule(BaseVulnerability):
                                                     <li>Never concatenate user input directly into SQL strings.</li>
                                                 </ul>
                                             </div>
-                                            """)
+                                            """,
+                                            request_payload=f"GET {target_url} HTTP/1.1\nHost: {url.split('/')[2]}\nUser-Agent: Vuln-Hunter-Enterprise",
+                                            response_data=text[:1000],
+                                            detection_logic=f"Pattern matching for database error string: '{err}'",
+                                            confidence="High",
+                                            impact="Full Database Compromise (Data Exfiltration, Auth Bypass)")
                                 return
             except:
                 pass

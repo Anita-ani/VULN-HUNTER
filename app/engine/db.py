@@ -37,7 +37,22 @@ def init_bounty_db():
                   location TEXT, -- URL or Param
                   proof TEXT,
                   description TEXT,
+                  request_payload TEXT,
+                  response_data TEXT,
+                  detection_logic TEXT,
+                  confidence TEXT,
+                  impact TEXT,
                   FOREIGN KEY(scan_id) REFERENCES scans(id))''')
+    
+    # Migration for existing DBs
+    try:
+        c.execute("ALTER TABLE findings ADD COLUMN request_payload TEXT")
+        c.execute("ALTER TABLE findings ADD COLUMN response_data TEXT")
+        c.execute("ALTER TABLE findings ADD COLUMN detection_logic TEXT")
+        c.execute("ALTER TABLE findings ADD COLUMN confidence TEXT")
+        c.execute("ALTER TABLE findings ADD COLUMN impact TEXT")
+    except:
+        pass
                   
     conn.commit()
     conn.close()
@@ -71,11 +86,16 @@ def add_asset(scan_id, url, type, method="GET", params=None):
     conn.commit()
     conn.close()
 
-def add_finding(scan_id, vuln_type, severity, location, proof, description):
+def add_finding(scan_id, vuln_type, severity, location, proof, description, 
+                request_payload=None, response_data=None, detection_logic=None, confidence="Medium", impact=None):
     conn = sqlite3.connect(DB_NAME)
     c = conn.cursor()
-    c.execute("INSERT INTO findings (scan_id, vuln_type, severity, location, proof, description) VALUES (?, ?, ?, ?, ?, ?)",
-              (scan_id, vuln_type, severity, location, proof, description))
+    c.execute("""INSERT INTO findings 
+                 (scan_id, vuln_type, severity, location, proof, description, 
+                  request_payload, response_data, detection_logic, confidence, impact) 
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+              (scan_id, vuln_type, severity, location, proof, description, 
+               request_payload, response_data, detection_logic, confidence, impact))
     
     # Update count
     c.execute("UPDATE scans SET findings_count = findings_count + 1 WHERE id = ?", (scan_id,))

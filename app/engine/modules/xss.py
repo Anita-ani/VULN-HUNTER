@@ -35,7 +35,12 @@ class XSSModule(BaseVulnerability):
                                                 <li>Validate and sanitize all input on the server side.</li>
                                             </ul>
                                         </div>
-                                        """)
+                                        """,
+                                        request_payload=f"GET {target_url}",
+                                        response_data=text[:500], # Store snippet
+                                        detection_logic=f"Payload '{payload}' was reflected verbatim in the response body.",
+                                        confidence="High",
+                                        impact="Client-Side Compromise (Session Hijacking, Phishing)")
                             return # Stop after one finding per param to avoid noise
             except:
                 pass

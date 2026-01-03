@@ -155,6 +155,26 @@ class BountyEngine:
                 "to": finding_id
             })
 
+            # Kill-Chain: Add Impact Node if present
+            if finding.get('impact'):
+                impact_id = f"impact_{finding['id']}"
+                nodes.append({
+                    "id": impact_id,
+                    "label": finding['impact'][:15] + "..." if len(finding['impact']) > 15 else finding['impact'],
+                    "group": "impact",
+                    "title": f"IMPACT: {finding['impact']}",
+                    "shape": "box",
+                    "color": "#000000",
+                    "font": {"color": "#ff0000"}
+                })
+                edges.append({
+                    "id": f"edge_{finding_id}_{impact_id}",
+                    "from": finding_id,
+                    "to": impact_id,
+                    "dashes": True,
+                    "color": {"color": "#ff0000"}
+                })
+
         return {
             "scan": raw_results['scan'],
             "graph": {"nodes": nodes, "edges": edges},

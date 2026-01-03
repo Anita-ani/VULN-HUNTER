@@ -286,7 +286,8 @@
                 finding_critical: { color: { background: '#ff0000', border: '#ff0000' }, shape: 'diamond', size: 25, font: { color: '#ff0000' } },
                 finding_high: { color: { background: '#ff6600', border: '#ff6600' }, shape: 'diamond', size: 20 },
                 finding_medium: { color: { background: '#ffcc00', border: '#ffcc00' }, shape: 'diamond', size: 15 },
-                finding_low: { color: { background: '#00ccff', border: '#00ccff' }, shape: 'diamond', size: 12 }
+                finding_low: { color: { background: '#00ccff', border: '#00ccff' }, shape: 'diamond', size: 12 },
+                impact: { color: { background: '#111111', border: '#ff0000' }, shape: 'box', font: { color: '#ff0000', face: 'Share Tech Mono' }, margin: 10, shadow: true }
             },
             interaction: { hover: true }
         };
@@ -430,7 +431,54 @@
         function showDetails(finding) {
             document.getElementById('modal-title').innerText = finding.vuln_type.toUpperCase();
             document.getElementById('modal-subtitle').innerText = finding.location;
-            document.getElementById('modal-content').innerHTML = finding.description || finding.proof || "No details available.";
+            
+            let content = `<div class="space-y-4">`;
+            
+            // Confidence Badge
+            if(finding.confidence) {
+                content += `<span class="px-2 py-1 text-xs font-bold rounded bg-blue-900 text-blue-300 border border-blue-700">CONFIDENCE: ${finding.confidence.toUpperCase()}</span>`;
+            }
+
+            // Impact
+            if(finding.impact) {
+                content += `<div class="p-3 bg-red-900/20 border border-red-800 rounded">
+                    <h4 class="text-red-400 font-bold text-sm mb-1">IMPACT ANALYSIS</h4>
+                    <p class="text-gray-300 text-sm">${finding.impact}</p>
+                </div>`;
+            }
+
+            // Description/Proof
+            content += `<div class="prose prose-invert text-sm max-w-none">${finding.description || finding.proof || "No details available."}</div>`;
+
+            // Evidence Locker
+            if(finding.request_payload || finding.response_data) {
+                content += `<div class="mt-4 border-t border-gray-700 pt-4">
+                    <h3 class="text-lg font-bold text-gray-200 mb-2">EVIDENCE LOCKER</h3>
+                    
+                    ${finding.detection_logic ? `<div class="mb-3"><span class="text-yellow-500 font-mono text-xs">DETECTION LOGIC:</span> <span class="text-gray-400 text-xs">${finding.detection_logic}</span></div>` : ''}
+
+                    <div class="grid grid-cols-1 gap-4">`;
+                
+                if(finding.request_payload) {
+                    content += `<div>
+                        <div class="text-xs text-gray-500 mb-1">PAYLOAD / REQUEST</div>
+                        <pre class="bg-black p-2 rounded text-xs text-green-400 font-mono overflow-x-auto border border-gray-800">${finding.request_payload.replace(/</g, '&lt;')}</pre>
+                    </div>`;
+                }
+
+                if(finding.response_data) {
+                    content += `<div>
+                        <div class="text-xs text-gray-500 mb-1">RESPONSE SNIPPET</div>
+                        <pre class="bg-black p-2 rounded text-xs text-blue-300 font-mono overflow-x-auto border border-gray-800">${finding.response_data.replace(/</g, '&lt;')}</pre>
+                    </div>`;
+                }
+                
+                content += `</div></div>`;
+            }
+            
+            content += `</div>`;
+
+            document.getElementById('modal-content').innerHTML = content;
             document.getElementById('details-modal').classList.remove('hidden');
         }
 

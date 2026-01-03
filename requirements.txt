@@ -1,10 +1,10 @@
 fastapi
 uvicorn
 requests
+aiohttp
 beautifulsoup4
-dnspython
+playwright
+mitmproxy
 jinja2
 python-multipart
-mitmproxy
-playwright
-aiohttp
+colorama
