@@ -1,4 +1,4 @@
-# Vuln Hunter Enterprise 🛡️
+# Vuln Hunter Enterprise
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python)
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.95%2B-009688?style=for-the-badge&logo=fastapi)
@@ -9,18 +9,18 @@
 
 ---
 
-## ⚡ Why Vuln Hunter?
+## Why Vuln Hunter?
 
 | Feature | Vuln Hunter | Traditional Scanners | Burp Suite |
 | :--- | :---: | :---: | :---: |
-| **Visual Recon** | ✅ **Live Graph** | ❌ List-based | ❌ Tree-based |
-| **Architecture** | 🚀 **Async/Event-Driven** | 🐢 Threaded/Linear | 🐢 Threaded |
-| **Extensibility**| 🧩 **Python Modules** | 🔒 Closed/Complex | 🧩 BApps (Java) |
-| **Cost** | 💸 **Open Source** | 💰 $$$ | 💰 $$$ |
+| **Visual Recon** | **Live Graph** | List-based | Tree-based |
+| **Architecture** | **Async/Event-Driven** | Threaded/Linear | Threaded |
+| **Extensibility**| **Python Modules** | Closed/Complex | BApps (Java) |
+| **Cost** | **Open Source** | $$$ | $$$ |
 
 ---
 
-## 🎯 Who This Is For
+## Who This Is For
 *   **Bug Bounty Hunters**: Automate initial recon and finding discovery.
 *   **AppSec Engineers**: Continuous scanning of internal assets.
 *   **Red Teamers**: Rapid visualization of target infrastructure.
@@ -28,9 +28,9 @@
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
-### 🧠 Advanced Auto-Fuzzer
+### Advanced Auto-Fuzzer
 The core of Vuln Hunter is its modular, asynchronous fuzzing engine (`AutoFuzzer`). It concurrently tests for a wide range of critical vulnerabilities using "Fast & Premium" logic:
 
 *   **OWASP Top 10 Coverage**:
@@ -50,31 +50,31 @@ The core of Vuln Hunter is its modular, asynchronous fuzzing engine (`AutoFuzzer
     *   **Open Redirects**: Unvalidated redirect destinations.
     *   **CRLF Injection**: HTTP response splitting checks.
 
-### 🌐 Interactive Graph Dashboard
+### Interactive Graph Dashboard
 *   **Visual Reconnaissance**: Real-time network graph visualization using Vis.js.
 *   **Dynamic Discovery**: Nodes (Domains, Files, Parameters) appear instantly as they are crawled.
 *   **Vulnerability Highlighting**: Found vulnerabilities are attached as red, pulsing nodes to their respective assets.
 *   **Physics-Based UI**: Drag, zoom, and stabilize nodes for better analysis.
 
-### 📊 Reporting & Management
+### Reporting & Management
 *   **JSON Export**: Generate and download comprehensive scan reports with one click.
 *   **Dashboard**: Monitor scan progress, asset count, and vulnerability stats live.
 *   **Proof-of-Concept Retention**: (Planned) Reports include exact request/response evidence for validation.
 
 ---
 
-## 🔮 Enterprise Roadmap (Planned)
+## Enterprise Roadmap (Planned)
 To justify the "Enterprise" moniker and ensure scalability for professional environments, we are actively developing:
 
-*   **🔐 Role-Based Access Control (RBAC)**: Multi-user environments with admin/viewer roles.
-*   **💾 Scan Persistence**: PostgreSQL integration for long-term history and trend analysis.
-*   **🛡️ Authentication**: API Key and OAuth2 support for secure deployment.
-*   **🐳 Containerization**: Official Docker and Kubernetes Helm charts.
-*   **📊 CVSS Scoring**: Automated severity scoring based on finding context.
+*   **Role-Based Access Control (RBAC)**: Multi-user environments with admin/viewer roles.
+*   **Scan Persistence**: PostgreSQL integration for long-term history and trend analysis.
+*   **Authentication**: API Key and OAuth2 support for secure deployment.
+*   **Containerization**: Official Docker and Kubernetes Helm charts.
+*   **CVSS Scoring**: Automated severity scoring based on finding context.
 
 ---
 
-## 🛠️ Architecture
+## Architecture
 *   **Frontend**: HTML5, TailwindCSS, Vis.js (Single Page Application).
 *   **Backend**: Python FastAPI (High-performance Async I/O).
 *   **Engine**: `aiohttp` for concurrent fuzzing, modular plugin system.
@@ -82,7 +82,7 @@ To justify the "Enterprise" moniker and ensure scalability for professional envi
 
 ---
 
-## 📦 Installation & Usage
+## Installation & Usage
 
 1.  **Clone the Repository**
     ```bash
@@ -109,8 +109,8 @@ To justify the "Enterprise" moniker and ensure scalability for professional envi
 
 ---
 
-## 🛡️ Disclaimer
+## Disclaimer
 This tool is for **educational and authorized testing purposes only**. Do not use this tool on systems you do not have explicit permission to test. The authors are not responsible for any misuse.
 
 ---
-*Built with ❤️ for the Bug Bounty Community.*
+*Built for the Bug Bounty Community.*
