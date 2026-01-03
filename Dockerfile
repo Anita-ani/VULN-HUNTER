@@ -17,9 +17,9 @@ RUN playwright install chromium
 COPY . .
 
 # Expose ports
-# 8000: Web Dashboard
+# 7860: Web Dashboard (Hugging Face Spaces Default)
 # 8081: Mitmproxy
-EXPOSE 8000
+EXPOSE 7860
 EXPOSE 8081
 
 # Run the startup script

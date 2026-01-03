@@ -7,9 +7,10 @@ def run_services():
     print("[*] Starting Bug Bounty Assistant...")
 
     # Start FastAPI Backend
-    print("[*] Launching Web Interface (FastAPI) on port 8000...")
+    port = int(os.environ.get("PORT", 8000))
+    print(f"[*] Launching Web Interface (FastAPI) on port {port}...")
     fastapi_process = subprocess.Popen(
-        [sys.executable, "-m", "uvicorn", "main:app", "--host", "127.0.0.1", "--port", "8000"],
+        [sys.executable, "-m", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", str(port)],
         cwd=os.getcwd()
     )
 
@@ -17,12 +18,12 @@ def run_services():
     print("[*] Launching Proxy Server (Mitmproxy) on port 8081...")
     # We use mitmdump because we want to run headless and use our addon
     mitm_process = subprocess.Popen(
-        ["mitmdump", "-s", "app/proxy_addon.py", "--listen-port", "8081", "--ssl-insecure"],
+        ["mitmdump", "-s", "app/proxy_addon.py", "--listen-host", "0.0.0.0", "--listen-port", "8081", "--ssl-insecure"],
         cwd=os.getcwd()
     )
 
     print("\n[+] System is running!")
-    print("    -> Web Dashboard: http://127.0.0.1:8000")
+    print(f"    -> Web Dashboard: http://0.0.0.0:{port}")
     print("    -> Proxy Server:  127.0.0.1:8081")
     print("    -> Configure your browser/tools to use this proxy to capture traffic.")
     print("\nPress Ctrl+C to stop all services.")

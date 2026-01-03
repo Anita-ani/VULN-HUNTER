@@ -109,6 +109,18 @@ To justify the "Enterprise" moniker and ensure scalability for professional envi
 
 ---
 
+## Deployment (Free)
+
+### Hugging Face Spaces (Recommended)
+This project is configured for **Hugging Face Spaces** (Docker SDK), which offers generous free tier resources (16GB RAM) suitable for Playwright.
+
+1.  Create a new [Space on Hugging Face](https://huggingface.co/new-space).
+2.  Select **Docker** as the SDK.
+3.  Push this repository to your Space.
+4.  The application will automatically launch on port `7860`.
+
+---
+
 ## Disclaimer
 This tool is for **educational and authorized testing purposes only**. Do not use this tool on systems you do not have explicit permission to test. The authors are not responsible for any misuse.
 
