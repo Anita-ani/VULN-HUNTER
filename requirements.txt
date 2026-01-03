@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+requests
+beautifulsoup4
+dnspython
+jinja2
+python-multipart
+mitmproxy
+playwright
+aiohttp

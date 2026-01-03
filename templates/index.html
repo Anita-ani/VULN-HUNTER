@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VULN HUNTER // ENTERPRISE</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Cyber/Tech feel -->
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    
+    <!-- Vis.js for Network Graph -->
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    
+    <!-- Chart.js for Radar -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            font-family: 'Share Tech Mono', monospace;
+            background-color: #050505;
+            color: #00ff00;
+        }
+        
+        .cyber-border {
+            border: 1px solid #333;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.1);
+            position: relative;
+        }
+        
+        .cyber-border::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0;
+            width: 10px; height: 10px;
+            border-top: 2px solid #00ff00;
+            border-left: 2px solid #00ff00;
+        }
+        
+        .cyber-border::after {
+            content: '';
+            position: absolute;
+            bottom: 0; right: 0;
+            width: 10px; height: 10px;
+            border-bottom: 2px solid #00ff00;
+            border-right: 2px solid #00ff00;
+        }
+
+        .scan-line {
+            width: 100%;
+            height: 2px;
+            background: rgba(0, 255, 0, 0.3);
+            position: absolute;
+            z-index: 10;
+            animation: scan 3s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes scan {
+            0% { top: 0%; }
+            100% { top: 100%; }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00ff00;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- TOP BAR -->
+    <header class="h-14 border-b border-gray-800 flex items-center justify-between px-6 bg-black z-20">
+        <div class="flex items-center gap-4">
+            <div class="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <h1 class="text-xl tracking-widest text-green-500 font-bold">VULN HUNTER <span class="text-[10px] text-gray-500 border border-gray-700 px-1 ml-1">ENT. EDITION</span></h1>
+        </div>
+        
+        <!-- TABS -->
+        <nav class="flex h-full">
+            <button class="px-6 h-full border-b-2 border-green-500 text-green-400 bg-gray-900 transition-colors">DASHBOARD</button>
+            <button onclick="generateReport()" class="tab-btn px-6 h-full border-b-2 border-transparent text-gray-500 hover:text-green-400 hover:bg-gray-900 transition-colors">REPORT</button>
+        </nav>
+
+        <div class="flex gap-4 text-xs text-gray-500">
+            <div>CPU: <span class="text-green-400">12%</span></div>
+            <div>NET: <span class="text-green-400">ACTIVE</span></div>
+        </div>
+    </header>
+
+    <!-- TARGET INPUT BAR (Persistent) -->
+    <div class="bg-gray-900 border-b border-gray-800 p-2 flex justify-center z-10">
+        <div class="flex gap-2 w-full max-w-4xl">
+            <span class="text-gray-500 py-1 font-mono text-sm">TARGET://</span>
+            <input type="text" id="target-input" placeholder="https://target.com" 
+                   class="flex-1 bg-black border border-gray-700 text-green-400 px-4 py-1 text-sm focus:outline-none focus:border-green-500 transition-colors">
+            <button onclick="startHunt()" class="bg-green-900 hover:bg-green-700 text-green-100 px-6 py-1 border border-green-600 text-sm tracking-wider transition-all">
+                INITIALIZE
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN CONTAINER -->
+    <div class="flex-1 relative overflow-hidden flex flex-col">
+        
+        <!-- VIEW: DASHBOARD -->
+        <main id="view-dashboard" class="view-section flex-1 grid grid-cols-12 gap-0 relative h-full">
+        <!-- BACKGROUND GRID EFFECT -->
+        <div class="absolute inset-0 pointer-events-none" 
+             style="background-image: linear-gradient(#111 1px, transparent 1px), linear-gradient(90deg, #111 1px, transparent 1px); background-size: 40px 40px; opacity: 0.2; z-index: -1;">
+        </div>
+
+        <!-- LEFT PANEL: STATS & RADAR (3 cols) -->
+        <div class="col-span-3 border-r border-gray-800 bg-black/80 flex flex-col p-4 gap-6">
+            <!-- STATUS CARD -->
+            <div class="cyber-border p-4 bg-gray-900/50">
+                <h3 class="text-gray-400 text-sm mb-4 border-b border-gray-700 pb-1">MISSION STATUS</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <div class="text-xs text-gray-500">ASSETS</div>
+                        <div id="stat-assets" class="text-2xl text-blue-400">0</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500">VULNS</div>
+                        <div id="stat-vulns" class="text-2xl text-red-500 font-bold">0</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500">DURATION</div>
+                        <div id="stat-time" class="text-lg text-gray-300">00:00</div>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-500">REQUESTS</div>
+                        <div class="text-lg text-gray-300">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RADAR CHART -->
+            <div class="cyber-border p-4 bg-gray-900/50 flex-1 flex flex-col">
+                <h3 class="text-gray-400 text-sm mb-2 border-b border-gray-700 pb-1">THREAT RADAR</h3>
+                <div class="flex-1 relative">
+                    <canvas id="threatRadar"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- CENTER PANEL: NETWORK MAP (6 cols) -->
+        <div class="col-span-6 bg-black/50 cyber-border relative min-h-[400px]">
+            <div class="absolute top-2 left-2 z-10 text-xs text-green-500 font-mono">TOPOLOGY VIEW :: REAL-TIME</div>
+            <div class="absolute top-2 right-2 z-10">
+                 <button onclick="network.fit({animation:{duration:1000}})" class="bg-gray-900 border border-green-900 text-green-500 px-2 py-1 text-[10px] hover:bg-green-900/30">RECENTER</button>
+            </div>
+            <div id="network-graph" class="w-full h-full"></div>
+        </div>
+
+        <!-- RIGHT PANEL: LOGS & FEED (3 cols) -->
+        <div class="col-span-3 border-l border-gray-800 bg-black/80 flex flex-col">
+            <!-- FINDINGS FEED -->
+            <div class="h-1/2 flex flex-col border-b border-gray-800">
+                <div class="bg-gray-900 px-4 py-2 border-b border-gray-800 flex justify-between">
+                    <span class="text-red-500 font-bold text-sm">CRITICAL ALERTS</span>
+                    <div class="w-2 h-2 bg-red-500 rounded-full animate-ping"></div>
+                </div>
+                <div id="findings-feed" class="flex-1 overflow-y-auto p-4 space-y-3">
+                    <!-- Dynamic Items -->
+                    <div class="text-gray-500 text-xs italic text-center mt-10">Waiting for data stream...</div>
+                </div>
+            </div>
+
+            <!-- SYSTEM CONSOLE -->
+            <div class="h-1/2 flex flex-col bg-gray-900">
+                <div class="bg-black px-4 py-1 border-b border-gray-800 text-xs text-gray-500">
+                    SYSTEM_CONSOLE_OUT
+                </div>
+                <div id="console-output" class="flex-1 overflow-y-auto p-4 font-mono text-xs text-gray-400 space-y-1">
+                    <div class="text-green-900">> System Initialized...</div>
+                    <div class="text-green-900">> Ready for input.</div>
+                </div>
+            </div>
+        </div>
+        </main>
+    </div>
+    <div id="details-modal" class="hidden fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8">
+        <div class="bg-gray-900 cyber-border max-w-3xl w-full max-h-[80vh] flex flex-col shadow-2xl relative">
+            <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-500 hover:text-white">
+                [CLOSE_X]
+            </button>
+            <div class="p-6 border-b border-gray-800 bg-black/50">
+                <h2 id="modal-title" class="text-xl font-bold text-red-500">VULNERABILITY DETAILS</h2>
+                <div id="modal-subtitle" class="text-sm text-gray-400 font-mono mt-1"></div>
+            </div>
+            <div class="p-6 overflow-y-auto text-gray-300 space-y-4" id="modal-content">
+                <!-- Content injected here -->
+            </div>
+            <div class="p-4 bg-black/50 border-t border-gray-800 text-right">
+                <button onclick="closeModal()" class="bg-gray-800 hover:bg-gray-700 px-4 py-2 text-sm text-white border border-gray-600">ACKNOWLEDGE</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CHART & GRAPH SETUP ---
+        
+        // 1. Radar Chart
+        const ctx = document.getElementById('threatRadar').getContext('2d');
+        const radarChart = new Chart(ctx, {
+            type: 'radar',
+            data: {
+                labels: ['XSS', 'SQLi', 'Auth', 'Config', 'Crypto', 'Headers'],
+                datasets: [{
+                    label: 'Risk Score',
+                    data: [0, 0, 0, 0, 0, 0],
+                    backgroundColor: 'rgba(255, 0, 0, 0.2)',
+                    borderColor: 'rgba(255, 0, 0, 1)',
+                    borderWidth: 1,
+                    pointBackgroundColor: '#ff0000'
+                }]
+            },
+            options: {
+                scales: {
+                    r: {
+                        angleLines: { color: '#333' },
+                        grid: { color: '#333' },
+                        pointLabels: { color: '#0f0', font: { family: 'Share Tech Mono' } },
+                        ticks: { display: false, backdropColor: 'transparent' },
+                        min: 0,
+                        max: 10
+                    }
+                },
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // 2. Network Graph (Vis.js)
+        const container = document.getElementById('network-graph');
+        const data = { nodes: new vis.DataSet([]), edges: new vis.DataSet([]) };
+        const options = {
+            nodes: {
+                shape: 'dot',
+                size: 10,
+                font: { face: 'Share Tech Mono', color: '#0f0' },
+                borderWidth: 2,
+                shadow: false,
+                shapeProperties: { interpolation: false }
+            },
+            edges: {
+                width: 1,
+                color: { color: '#333', highlight: '#0f0' },
+                smooth: false,
+                shadow: false
+            },
+            physics: {
+                stabilization: false,
+                maxVelocity: 30,
+                minVelocity: 0.75,
+                solver: 'forceAtlas2Based',
+                forceAtlas2Based: {
+                    gravitationalConstant: -120,
+                    centralGravity: 0.01,
+                    springConstant: 0.08,
+                    springLength: 100,
+                    damping: 1.0,
+                    avoidOverlap: 0
+                },
+                timestep: 0.35,
+                adaptiveTimestep: true
+            },
+            groups: {
+                target: { color: { background: '#00ff00', border: '#00ff00' }, size: 20 },
+                asset: { color: { background: '#003300', border: '#006600' } },
+                port: { color: { background: '#0000ff', border: '#0000aa' }, shape: 'hexagon', size: 12 },
+                dir: { color: { background: '#004444', border: '#008888' }, shape: 'square' },
+                file: { color: { background: '#005555', border: '#00aaaa' }, shape: 'square' },
+                finding: { color: { background: '#ff0000', border: '#ff0000' }, shape: 'diamond' },
+                finding_critical: { color: { background: '#ff0000', border: '#ff0000' }, shape: 'diamond', size: 25, font: { color: '#ff0000' } },
+                finding_high: { color: { background: '#ff6600', border: '#ff6600' }, shape: 'diamond', size: 20 },
+                finding_medium: { color: { background: '#ffcc00', border: '#ffcc00' }, shape: 'diamond', size: 15 },
+                finding_low: { color: { background: '#00ccff', border: '#00ccff' }, shape: 'diamond', size: 12 }
+            },
+            interaction: { hover: true }
+        };
+        const network = new vis.Network(container, data, options);
+
+        // --- APP LOGIC ---
+
+        function generateReport() {
+             const report = {
+                 scanId: currentScanId,
+                 target: document.getElementById('target-input').value,
+                 timestamp: new Date().toISOString(),
+                 stats: {
+                     assets: document.getElementById('stat-assets').innerText,
+                     vulns: document.getElementById('stat-vulns').innerText
+                 },
+                 note: "This is a summary report generated by Vuln Hunter Enterprise."
+             };
+             
+             const blob = new Blob([JSON.stringify(report, null, 2)], {type: 'application/json'});
+             const url = URL.createObjectURL(blob);
+             const a = document.createElement('a');
+             a.href = url;
+             a.download = `vuln_report_${Date.now()}.json`;
+             a.click();
+             alert("Report generated and downloaded.");
+        }
+
+        let currentScanId = null;
+        let pollInterval = null;
+        let startTime = null;
+
+        async function startHunt() {
+            const target = document.getElementById('target-input').value;
+            if (!target) return alert("ENTER TARGET URL");
+
+            logConsole(`Initializing hunt on: ${target}`);
+            
+            // Reset Graph
+            data.nodes.clear();
+            data.edges.clear();
+            document.getElementById('findings-feed').innerHTML = '';
+            
+            const formData = new FormData();
+            formData.append('target', target);
+
+            try {
+                const res = await fetch('/scan/auto', { method: 'POST', body: formData });
+                const json = await res.json();
+                
+                if (json.status === 'started') {
+                    currentScanId = json.scan_id;
+                    startTime = Date.now();
+                    logConsole(`Scan Job ID: ${currentScanId} confirmed.`);
+                    logConsole(`Deploying Crawler swarms...`);
+                    
+                    if (pollInterval) clearInterval(pollInterval);
+                    pollInterval = setInterval(pollStatus, 2000);
+                    
+                    // Update timer
+                    setInterval(() => {
+                        const delta = Math.floor((Date.now() - startTime) / 1000);
+                        const mins = Math.floor(delta / 60).toString().padStart(2, '0');
+                        const secs = (delta % 60).toString().padStart(2, '0');
+                        document.getElementById('stat-time').innerText = `${mins}:${secs}`;
+                    }, 1000);
+                }
+            } catch (e) {
+                logConsole(`ERROR: ${e.message}`, 'error');
+            }
+        }
+
+        async function pollStatus() {
+            if (!currentScanId) return;
+
+            try {
+                const res = await fetch(`/scan/${currentScanId}`);
+                const json = await res.json();
+
+                if (json.error) return;
+
+                // Update Stats
+                document.getElementById('stat-assets').innerText = json.assets_count;
+                document.getElementById('stat-vulns').innerText = json.findings_count;
+
+                // Update Graph (Diffing would be better, but clearing for MVP simplicity or using update)
+                // For smoother UX, we iterate and update/add
+                if (json.graph) {
+                    let hasNewData = false;
+                    json.graph.nodes.forEach(node => {
+                        try { 
+                            if(!data.nodes.get(node.id)) hasNewData = true;
+                            data.nodes.update(node); 
+                        } catch(e){}
+                    });
+                    json.graph.edges.forEach(edge => {
+                         try { data.edges.update(edge); } catch(e){}
+                    });
+                    
+                    // Removed auto-fit to prevent motion sickness/jumping. 
+                    // Physics with central gravity will keep nodes reasonably centered.
+                }
+
+                // Update Findings Feed
+                const feed = document.getElementById('findings-feed');
+                // Clear and rebuild for now (simple)
+                feed.innerHTML = '';
+                json.findings.forEach(f => {
+                    const el = document.createElement('div');
+                    el.className = `p-3 border-l-2 border-${f.severity === 'High' ? 'red' : f.severity === 'Medium' ? 'orange' : 'yellow'}-500 bg-gray-900/80 text-xs mb-2 cursor-pointer hover:bg-gray-800 transition-colors`;
+                    el.onclick = () => showDetails(f);
+                    el.innerHTML = `
+                        <div class="flex justify-between text-${f.severity === 'High' ? 'red' : 'yellow'}-400 font-bold">
+                            <span>${f.vuln_type.toUpperCase()}</span>
+                            <span>${f.severity}</span>
+                        </div>
+                        <div class="text-gray-400 truncate mt-1">${f.location}</div>
+                        <div class="text-gray-600 text-[10px] mt-1 text-right">CLICK FOR INTEL >></div>
+                    `;
+                    feed.appendChild(el);
+                    
+                    // Update Radar (Fake logic for demo)
+                    if(f.vuln_type.includes('XSS')) radarChart.data.datasets[0].data[0] += 2;
+                    if(f.vuln_type.includes('SQL')) radarChart.data.datasets[0].data[1] += 2;
+                    radarChart.update();
+                });
+                
+                // Simulate Console Activity
+                if (json.assets_count > 0 && Math.random() > 0.7) {
+                    const randomAsset = json.graph.nodes[Math.floor(Math.random() * json.graph.nodes.length)];
+                    if (randomAsset.group === 'asset') {
+                        logConsole(`Scanning ${randomAsset.label}...`);
+                    }
+                }
+
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function showDetails(finding) {
+            document.getElementById('modal-title').innerText = finding.vuln_type.toUpperCase();
+            document.getElementById('modal-subtitle').innerText = finding.location;
+            document.getElementById('modal-content').innerHTML = finding.description || finding.proof || "No details available.";
+            document.getElementById('details-modal').classList.remove('hidden');
+        }
+
+        function closeModal() {
+            document.getElementById('details-modal').classList.add('hidden');
+        }
+
+        function logConsole(msg, type='info') {
+            const consoleEl = document.getElementById('console-output');
+            const line = document.createElement('div');
+            line.className = type === 'error' ? 'text-red-500' : 'text-green-500';
+            line.innerText = `> ${msg}`;
+            consoleEl.appendChild(line);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+    </script>
+</body>
+</html>
